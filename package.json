@@ -1,0 +1,8 @@
+{
+  "name": "okkum-cronologia",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Okkum: Entre nosotros - cronologia con walkie-talkie",
+  "scripts": { "start": "node server.js" },
+  "engines": { "node": ">=18" }
+}

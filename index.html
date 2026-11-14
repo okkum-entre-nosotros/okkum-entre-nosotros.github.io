@@ -225,6 +225,14 @@ html.sp,html.sp body{overflow:hidden}
 .pfv{width:min(240px,70vw);aspect-ratio:1;margin:0 auto;border-radius:50%;overflow:hidden;border:3px solid var(--red);touch-action:none;cursor:grab;background:#0a1018}
 .pfv canvas{display:block;width:100%;height:100%}
 .pfh{text-align:center;font-size:.8rem;color:var(--mute);margin-top:-4px}
+#okov{position:fixed;inset:0;z-index:120;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:24px;text-align:center;background:#1f9d63;color:#fff;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .3s,visibility 0s .3s;cursor:pointer}
+#okov.on{opacity:1;visibility:visible;pointer-events:auto;transition:opacity .3s}
+#okov svg{width:min(34vw,150px);height:auto;fill:none;stroke:#fff;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+#okov svg path{stroke-dasharray:30;stroke-dashoffset:30}
+#okov.on svg path{animation:trazo .5s .15s ease forwards}
+@keyframes trazo{to{stroke-dashoffset:0}}
+#okov b{font-size:clamp(1.4rem,6vw,2.2rem);line-height:1.2;max-width:20ch}
+#okov small{font-size:.95rem;opacity:.9}
 @media (max-width:640px){.modos{padding:0 10px}.acto{padding:0 14px;font-size:1.2rem}.gb{margin:0 10px 14px;padding:14px}}
 
 </style>
@@ -272,6 +280,7 @@ html.sp,html.sp body{overflow:hidden}
 <button class="fab" id="fab" title="Walkie-talkie" aria-label="Walkie-talkie"></button>
 <div id="lb"><button id="cerrar" aria-label="Cerrar"></button><img id="lbimg" alt=""></div>
 <input type="file" id="file" accept="image/*" hidden>
+<div id="okov" aria-live="polite"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><b id="okt"></b><small>Escena marcada con check</small></div>
 <input type="file" id="pfile" accept="image/*" hidden>
 <div id="pf" hidden role="dialog" aria-label="Mi perfil">
   <div class="pfc">
@@ -382,6 +391,7 @@ function entrar(c){
   c=(c||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,8);
   if(!c)return;
   if(unsub){unsub();unsub=null}
+  syStop();
   sala=c;estados={};
   $('cod').textContent=c;
   try{history.replaceState(null,'','#sala-'+c)}catch(e){}
@@ -400,7 +410,8 @@ function entrar(c){
   }else{
     try{estados=JSON.parse(lsGet('okkum-e-'+c)||'{}')}catch(e){estados={}}
     try{aplicarOrden(JSON.parse(lsGet('okkum-o-'+c)||'null'))}catch(e){aplicarOrden(null)}
-    $('est').textContent='Solo en este dispositivo (sin conexión a la sala)';
+    $('est').textContent=propio&&wr?'Conectando a la sala…':'Solo en este dispositivo (sin conexión a la sala)';
+    if(propio&&wr){syLoad(c);syJoin(c)}
   }
   render();
   if(typeof wjoin==='function')wjoin();
@@ -408,7 +419,7 @@ function entrar(c){
 
 async function marcar(i,v){
   estados=Object.assign({},estados,{[i]:v});render();
-  if(!db){lsSet('okkum-e-'+sala,JSON.stringify(estados));return}
+  if(!db){const t=tick();tiempos[i]=t;lsSet('okkum-e-'+sala,JSON.stringify(estados));lsSet('okkum-t-'+sala,JSON.stringify(tiempos));syEnviar('estado',{i,v,t});return}
   const ref=db.doc('salas/'+sala);
   try{await ref.update({e:{[i]:v}})}
   catch(e){try{await ref.set({e:Object.assign({},estados),ord:curOrd()})}catch(_){$('est').textContent='No se pudo guardar el cambio'}}
@@ -650,7 +661,7 @@ function aplicarOrden(ord){
 }
 function guardarOrden(){
   const ord=curOrd();
-  if(!db||!sala){lsSet('okkum-o-'+sala,JSON.stringify(ord));return}
+  if(!db||!sala){lsSet('okkum-o-'+sala,JSON.stringify(ord));if(propio){ordT=tick();lsSet('okkum-ot-'+sala,String(ordT));syEnviar('orden',{o:ord,t:ordT})}return}
   const ref=db.doc('salas/'+sala);
   ref.update({ord}).catch(()=>{ref.set({e:Object.assign({},estados),ord}).catch(()=>{$('est').textContent='No se pudo guardar el orden'})});
 }
@@ -832,6 +843,67 @@ if(window.claude&&claude.use){
 else{$('wst').textContent='Abre la página desde tu servidor (node server.js), no desde el archivo'}
 
 
+
+
+/* ===== Sincronización de la sala sin claude.ai (check, espera y orden entre dispositivos) ===== */
+const propio=!(window.claude&&claude.use);
+let sy=null,syTok=0,syRe=0,tiempos={},ordT=0,maxTs=0,okTimer=0;
+const tick=()=>{const n=Math.max(Date.now(),maxTs+1);maxTs=n;return n};
+function syLoad(c){try{tiempos=JSON.parse(lsGet('okkum-t-'+c)||'{}')}catch(e){tiempos={}}ordT=+lsGet('okkum-ot-'+c)||0;maxTs=Math.max(ordT,0,...Object.values(tiempos).map(Number).filter(Number.isFinite))}
+function syStop(){syTok++;clearTimeout(syRe);if(sy){const r=sy;sy=null;try{r.leave()}catch(e){}}}
+function syEnviar(k,d){if(sy)try{sy.emit(k,d).catch(()=>{})}catch(e){}}
+function syFull(){return {e:estados,t:tiempos,o:curOrd(),ot:ordT}}
+function syEst(n){$('est').textContent=n>0?'En línea · '+n+(n===1?' dispositivo más':' dispositivos más')+' en la sala':'En línea · esperando a otros dispositivos'}
+function syGuardar(){lsSet('okkum-e-'+sala,JSON.stringify(estados));lsSet('okkum-t-'+sala,JSON.stringify(tiempos))}
+function syOrden(o,t){
+  if(!(t>ordT)||!Array.isArray(o))return;
+  ordT=t;maxTs=Math.max(maxTs,t);lsSet('okkum-ot-'+sala,String(t));lsSet('okkum-o-'+sala,JSON.stringify(o));aplicarOrden(o);
+}
+function syMezclar(d){
+  if(!d||typeof d!=='object')return;
+  const e=d.e||{},t=d.t||{};let ch=false;const nuevo=Object.assign({},estados);
+  for(const k in e){
+    const i=+k,v=e[k],tt=+t[k]||0;
+    if(!(i>=0&&i<items.length)||(v!=='check'&&v!=='espera'&&v!=='falta'))continue;
+    if(tt>(tiempos[i]||0)){nuevo[i]=v;tiempos[i]=tt;maxTs=Math.max(maxTs,tt);ch=true}
+  }
+  if(ch){estados=nuevo;syGuardar();render()}
+  syOrden(d.o,+d.ot);
+}
+function syRxEstado(m){
+  const d=m&&m.data;if(!d)return;
+  const i=+d.i,v=d.v,t=+d.t||0;
+  if(!(i>=0&&i<items.length)||(v!=='check'&&v!=='espera'&&v!=='falta'))return;
+  if(!(t>(tiempos[i]||0)))return;
+  const antes=estados[i];
+  tiempos[i]=t;maxTs=Math.max(maxTs,t);estados=Object.assign({},estados,{[i]:v});syGuardar();render();
+  if(v==='check'&&antes!=='check')celebrar(i);
+}
+function celebrar(i){
+  const ov=$('okov');$('okt').textContent=escenas[i].titulo;
+  ov.classList.remove('on');void ov.offsetWidth;ov.classList.add('on');
+  try{navigator.vibrate&&navigator.vibrate(80)}catch(e){}
+  clearTimeout(okTimer);okTimer=setTimeout(()=>ov.classList.remove('on'),2800);
+}
+$('okov').onclick=()=>{clearTimeout(okTimer);$('okov').classList.remove('on')};
+async function syJoin(c){
+  const tok=++syTok;
+  try{
+    const r=await wr.join('st-'+c.toLowerCase());
+    if(tok!==syTok){try{await r.leave()}catch(e){}return}
+    sy=r;
+    r.on('estado',syRxEstado);
+    r.on('full',m=>syMezclar(m&&m.data));
+    r.on('orden',m=>{const d=m&&m.data;if(d)syOrden(d.o,+d.t)});
+    r.onPeers(n=>{syEst(n);syEnviar('full',syFull())});
+    syEst(r.peers().length);syEnviar('full',syFull());
+  }catch(e){
+    if(tok!==syTok)return;
+    $('est').textContent='Sin conexión a la sala; tus cambios se guardan aquí y se enviarán al reconectar';
+    syRe=setTimeout(()=>{if(tok===syTok)syJoin(c)},6000);
+  }
+}
+setInterval(()=>{if(sy)syEnviar('full',syFull())},30000);
 
 /* ===== Perfil: nick + foto recortable (se muestra a quien esté en tu canal) ===== */
 const myId=(()=>{let v=lsGet('okkum-id');if(!v){v=Math.random().toString(36).slice(2,10);lsSet('okkum-id',v)}return v})();

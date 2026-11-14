@@ -1,0 +1,48 @@
+WALKIE-TALKIE FUERA DE CLAUDE
+=============================
+
+Por qué no funcionaba: la voz usaba un servicio que solo existe dentro de claude.ai.
+Ahora la carpeta trae su propio servidor (server.js) que reparte la voz entre los
+dispositivos de la misma sala y canal. No necesita instalar nada, solo Node 18 o superior.
+
+IMPORTANTE: el micrófono solo funciona con https (o en localhost). Por eso hay que
+publicar el servidor en internet con https; abrir index.html con doble clic NO sirve.
+
+Archivos necesarios (toda la carpeta tal cual):
+  server.js, package.json, index.html, sw.js, manifest.webmanifest, images/, svgs/
+
+------------------------------------------------------------
+A) PROBAR EN TU COMPUTADOR (2 pestañas o 2 ventanas)
+------------------------------------------------------------
+1. Instala Node desde https://nodejs.org (versión LTS).
+2. En la carpeta, abre una terminal y escribe:   node server.js
+3. Abre http://localhost:3000 en dos pestañas con el mismo código de sala,
+   toca el walkie y mantén pulsado "Mantén para hablar".
+
+------------------------------------------------------------
+B) PUBLICARLO PARA USARLO EN CELULARES (gratis, con https)
+------------------------------------------------------------
+Ejemplo con Render (render.com):
+1. Sube la carpeta completa a un repositorio de GitHub.
+2. En Render: New + > Web Service > elige tu repositorio.
+3. Runtime: Node.   Build Command: (vacío)   Start Command: node server.js
+4. Plan gratuito. Cuando termine te da un enlace https://algo.onrender.com
+5. Abre ese enlace en cada celular, usa el mismo código de sala y el mismo canal.
+
+Sirve igual en Railway, Fly.io, Glitch o cualquier hosting que permita Node y WebSocket.
+(GitHub Pages, Netlify estático y Cloudflare Pages estático NO sirven: no corren server.js.)
+
+Nota del plan gratuito de Render: el servidor se duerme tras un rato sin uso y tarda
+~30 segundos en despertar la primera vez.
+
+------------------------------------------------------------
+Cómo se usa
+------------------------------------------------------------
+- Todos deben estar en la misma SALA (el código de arriba) y el mismo CANAL (1 a 4).
+- Mantén pulsado para hablar; al soltar termina de transmitir (máximo 30 s seguidos).
+- Toca "Poner nick y foto" para que los demás vean quién habla.
+- Si dice "No se pudo conectar", el servidor no está corriendo o abriste el archivo
+  sin pasar por server.js.
+
+Lo que sigue siendo solo local: los estados (check/espera/falta) y el orden de las
+escenas se guardan en cada dispositivo; no se sincronizan entre personas.

@@ -1,0 +1,32 @@
+OKKUM: ENTRE NOSOTROS - LÍNEA CRONOLÓGICA
+=========================================
+
+Contenido
+---------
+index.html            La página completa (se abre con doble clic).
+manifest.webmanifest  Manifiesto para instalarla como app desde Chrome.
+sw.js                 Service worker (la deja funcionar sin conexión una vez cargada).
+svgs/okkum.svg        Logo grande de arriba (es una recreación: reemplázalo por tu okkum.svg, con el mismo nombre).
+svgs/icono-app.svg    Icono de la app.
+svgs/iconos/          Todos los iconos de la página, uno por archivo (check, reloj, equis, cámara, ampliar, etc.).
+images/fondo.jpg      Fondo ya difuminado y reducido (no necesita blur en CSS; si lo cambias, usa una imagen pequeña y borrosa).
+images/poster-okkum.webp  Póster original (comprimido).
+images/icon-*.png     Iconos de la app para Android/Chrome.
+images/escenas/01..12.svg  Imágenes de relleno de cada escena.
+
+Cómo poner tus imágenes en las escenas
+--------------------------------------
+Guarda tus imágenes en images/escenas/ y, en index.html, busca la lista "const escenas" y cambia el campo img de cada escena
+(por ejemplo img:"images/escenas/01.jpg").
+
+Instalar como app en el teléfono
+--------------------------------
+Chrome solo ofrece "Instalar app" si la página está en internet con https (por ejemplo GitHub Pages, Netlify o Cloudflare Pages).
+Sube la carpeta completa tal cual, ábrela en Chrome desde el teléfono y usa el menú > Instalar app.
+
+Importante: qué funciona fuera de Claude
+----------------------------------------
+- Funciona: línea cronológica, imágenes, ampliar, arrastrar escenas, filtros, vista de cuadros, check/espera/falta por hacer.
+- Estados y orden: se guardan solo en ese dispositivo (localStorage).
+- NO funciona: la sala sincronizada entre dispositivos y el walkie-talkie. Esas dos funciones usan servicios de claude.ai
+  y necesitan un servidor propio para funcionar en otro sitio. La versión publicada en claude.ai sigue teniéndolas.

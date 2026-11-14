@@ -541,9 +541,18 @@ marcaCanal();
 
 /* ===== Bip de walkie-talkie y micrófono abierto ===== */
 let openMic=false,vadOn=false,vadUntil=0,enWal=false,rxLast=0,rxName='',forceMuted=false,isHost=false,hostId=null;
+let walkiBuf=null,walkiBusy=false,walkiTry=0;
+function cargarWalki(){
+  if(walkiBuf||walkiBusy||walkiTry>=3||!ctx)return;
+  walkiBusy=true;walkiTry++;
+  fetch('walki.ogg').then(r=>{if(!r.ok)throw new Error('walki');return r.arrayBuffer()})
+    .then(b=>new Promise((ok,no)=>ctx.decodeAudioData(b,ok,no)))
+    .then(b=>{walkiBuf=b}).catch(()=>{}).finally(()=>{walkiBusy=false});
+}
 function beep(at){
   ensureCtx();if(!ctx)return;
   const t=Math.max(at||0,ctx.currentTime+0.02);
+  if(walkiBuf){const sr=ctx.createBufferSource();sr.buffer=walkiBuf;sr.connect(ctx.destination);sr.start(t);return}
   const o=ctx.createOscillator(),g=ctx.createGain();
   o.type='sine';o.frequency.setValueAtTime(1500,t);o.frequency.setValueAtTime(1100,t+0.07);
   g.gain.setValueAtTime(0.0001,t);
@@ -552,7 +561,7 @@ function beep(at){
   o.connect(g);g.connect(ctx.destination);o.start(t);o.stop(t+0.18);
 }
 function sendFin(){if(wRoom)wRoom.emit('fin',{i:myId}).catch(()=>{})}
-function rxFin(m){if(m.isMe||muted||(m.data&&mutedIds.has(m.data.i)))return;ensureCtx();if(!ctx)return;beep(Math.max(nextT,ctx.currentTime)+0.03)}
+function rxFin(m){if(m.isMe||muted||(m.data&&mutedIds.has(m.data.i)))return;ensureCtx();if(!ctx)return;const t0=Math.max(nextT,ctx.currentTime)+0.03;beep(t0);if(walkiBuf)nextT=t0+walkiBuf.duration}
 function pintarAbierto(){
   $('wopen').classList.toggle('on',openMic);
   $('wopen').innerHTML=withIc('mic',openMic?'Micrófono abierto: ACTIVADO':'Micrófono abierto');
@@ -566,7 +575,7 @@ function setOpen(on){
 $('wopen').onclick=()=>{ensureCtx();setOpen(!openMic)};
 pintarAbierto();
 
-function ensureCtx(){try{if(!ctx)ctx=new (window.AudioContext||window.webkitAudioContext)();if(ctx.state==='suspended')ctx.resume()}catch(e){}}
+function ensureCtx(){try{if(!ctx)ctx=new (window.AudioContext||window.webkitAudioContext)();if(ctx.state==='suspended')ctx.resume();cargarWalki()}catch(e){}}
 function wpeers(){if(!wRoom)return;const n=wRoom.peers().length;$('wst').textContent='Canal '+wch+' · '+n+(n===1?' conectado':' conectados')}
 async function wjoin(){
   if(!wr||!sala)return;

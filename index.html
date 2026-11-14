@@ -234,6 +234,40 @@ html.sp,html.sp body{overflow:hidden}
 #okov b{font-size:clamp(1.4rem,6vw,2.2rem);line-height:1.2;max-width:20ch}
 #okov small{font-size:.95rem;opacity:.9}
 @media (max-width:640px){.modos{padding:0 10px}.acto{padding:0 14px;font-size:1.2rem}.gb{margin:0 10px 14px;padding:14px}}
+/* ===== Vista solo walkie-talkie ===== */
+.sp-btns{flex-wrap:wrap}
+#spWal{flex:1 1 100%}
+#vWal{max-width:420px;margin:14px auto 90px;padding:0 16px;text-align:center}
+#wal{width:min(88vw,360px);height:auto;display:block;margin:0 auto;filter:drop-shadow(0 12px 28px #000a);user-select:none;-webkit-user-select:none}
+#wal .btn{cursor:pointer;-webkit-tap-highlight-color:transparent}
+#wPtt,#wSide{touch-action:none}
+#wal .pressable{transform-box:fill-box;transform-origin:center;transition:transform .08s}
+#wal .pressable:active{transform:scale(.96)}
+#wal .bt:hover .bcap{stroke:#d9453d}
+#wal .bt.on .bcap{fill:#3fa7a0}
+#wal .bt.m.on .bcap{fill:#f08a24}
+#wal.tx .pttcap{fill:#ff8a80}
+#wal.tx #wLed{fill:#ff3b30;filter:drop-shadow(0 0 6px #ff3b30)}
+#wal.rx #wLed{fill:#34d27b;filter:drop-shadow(0 0 6px #34d27b)}
+#wal.dis .pttcap{fill:#4a4f57}
+.walh{color:var(--mute);font-size:.9rem;margin:12px 0 0}
+/* ===== Miembros y salir de sala ===== */
+.mb{max-width:820px;margin:10px auto;padding:12px 16px;background:var(--card);border:1px solid var(--bd);border-radius:14px}
+.mbh{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.mbh small{color:var(--mute)}
+.mrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:7px 0;border-top:1px solid var(--bd)}
+.mrow:first-child{border-top:0}
+.mn{flex:1;min-width:90px}
+.mrow em{font-style:normal;font-size:.72rem;padding:2px 9px;border-radius:99px;border:1px solid var(--teal);color:var(--teal)}
+.mrow em.mu{border-color:var(--ora);color:var(--ora)}
+.mrow button{cursor:pointer;border-radius:8px;border:1px solid var(--line);background:#16283a;color:var(--txt);padding:7px 10px;font-size:.82rem}
+.mrow button.kick{border-color:var(--red);color:var(--red)}
+#salir:hover{border-color:var(--red);color:var(--red)}
+@media (max-width:640px){.mb{margin:8px 10px;padding:12px}}
+.wopen:disabled{opacity:.45;cursor:not-allowed}
+/* ===== Micrófono abierto ===== */
+.wopen{width:100%;margin-top:10px;cursor:pointer;justify-content:center;border-radius:14px;border:1px solid var(--line);background:#16283a;color:var(--txt);padding:13px;font-size:.95rem}
+.wopen.on{background:var(--teal);border-color:var(--teal);color:#04120f;font-weight:700;box-shadow:0 0 18px #3fa7a066}
 
 </style>
 </head>
@@ -241,7 +275,7 @@ html.sp,html.sp body{overflow:hidden}
 <div id="splash" role="dialog" aria-label="Elegir vista">
   <img src="svgs/okkum.svg" alt="Okkum: Entre nosotros" width="900" height="300" fetchpriority="high">
   <div class="sp-zona"><div class="spin" aria-label="Cargando"></div>
-    <div class="sp-btns"><button id="spGui"></button><button id="spEsc"></button></div></div>
+    <div class="sp-btns"><button id="spGui"></button><button id="spEsc"></button><button id="spWal"></button></div></div>
 </div>
 <header><img id="logo" src="svgs/okkum.svg" alt="Okkum: Entre nosotros" width="900" height="300" fetchpriority="high" decoding="async"></header>
 
@@ -252,9 +286,11 @@ html.sp,html.sp body{overflow:hidden}
     <button id="unir"></button>
     <button id="nueva"></button>
     <button id="copiar"></button>
+    <button id="salir"></button>
     <button id="wtog" title="Walkie-talkie" aria-label="Walkie-talkie"></button>
   </div>
 </section>
+<section class="mb" id="mb" hidden><div class="mbh"><b>Miembros</b><small id="mbn">1</small></div><div id="mbl"></div></section>
 <section class="wt closed" id="wt">
   <div class="wth"><span class="ico" id="wico"></span><b>Walkie-talkie</b><small id="wst">Conectando…</small><button id="wlisto"></button></div>
   <div class="yo" id="yo"></div>
@@ -264,9 +300,10 @@ html.sp,html.sp body{overflow:hidden}
     <button class="ptt" id="ptt" disabled></button>
     <button id="wmute" title="Silenciar" aria-label="Silenciar"></button>
   </div>
+  <button id="wopen" class="wopen" type="button"></button>
   <div class="wm" id="wm"></div>
 </section>
-<nav class="modos" id="modos"><button id="mEsc" class="on"></button><button id="mGui"></button></nav>
+<nav class="modos" id="modos"><button id="mEsc" class="on"></button><button id="mGui"></button><button id="mWal"></button></nav>
 <div id="vEsc">
 <div class="prog"><span id="pt"></span><div class="bar"><i id="pb"></i></div><div class="hint">Arrastra el icono de seis puntos de una escena para cambiar su orden.</div></div>
 
@@ -276,6 +313,40 @@ html.sp,html.sp body{overflow:hidden}
 <p class="vacio" id="vacio" style="display:none">No hay escenas con este estado.</p>
 </div>
 <div id="vGui" hidden></div>
+<div id="vWal" hidden>
+<svg id="wal" viewBox="0 0 320 620" role="group" aria-label="Walkie-talkie">
+<defs>
+<linearGradient id="gBody" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2f3a47"/><stop offset="1" stop-color="#141a22"/></linearGradient>
+<linearGradient id="gAnt" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#0d1218"/><stop offset=".5" stop-color="#2a3340"/><stop offset="1" stop-color="#0d1218"/></linearGradient>
+<radialGradient id="gPtt" cx=".4" cy=".35" r=".8"><stop offset="0" stop-color="#ff7b70"/><stop offset=".6" stop-color="#d9453d"/><stop offset="1" stop-color="#8f221c"/></radialGradient>
+<radialGradient id="gKnob" cx=".4" cy=".35" r=".8"><stop offset="0" stop-color="#3a4655"/><stop offset="1" stop-color="#0e1319"/></radialGradient>
+<linearGradient id="gLcd" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a6c9ad"/><stop offset="1" stop-color="#7ea58a"/></linearGradient>
+</defs>
+<rect x="228" y="6" width="30" height="108" rx="12" fill="url(#gAnt)" stroke="#3a4756" stroke-width="2"/>
+<g stroke="#3a4756" stroke-width="2"><line x1="233" y1="26" x2="253" y2="26"/><line x1="233" y1="40" x2="253" y2="40"/><line x1="233" y1="54" x2="253" y2="54"/><line x1="233" y1="68" x2="253" y2="68"/><line x1="233" y1="82" x2="253" y2="82"/></g>
+<rect x="40" y="100" width="240" height="492" rx="36" fill="url(#gBody)" stroke="#3a4756" stroke-width="2"/>
+<rect x="48" y="108" width="224" height="476" rx="30" fill="none" stroke="#ffffff14"/>
+<rect x="274" y="200" width="14" height="50" rx="6" fill="#1b232d" stroke="#3a4756"/>
+<g id="wSide" class="btn pressable"><rect x="22" y="186" width="24" height="124" rx="11" fill="#5a1511" stroke="#2a0a08" stroke-width="2"/><rect x="27" y="195" width="12" height="106" rx="6" fill="#d9453d" class="pttcap"/></g>
+<g id="wKnob" class="btn"><circle cx="110" cy="96" r="37" fill="#0b1015"/><g id="wKnobR" transform="rotate(0 110 96)"><circle cx="110" cy="96" r="30" fill="url(#gKnob)" stroke="#4a586a" stroke-width="2"/><circle cx="110" cy="96" r="33" fill="none" stroke="#56657a" stroke-width="5" stroke-dasharray="3 5"/><line x1="110" y1="72" x2="110" y2="86" stroke="#d9453d" stroke-width="4" stroke-linecap="round"/></g></g>
+<text x="110" y="142" text-anchor="middle" font-size="10" fill="#8a9ab0" font-family="Arial" letter-spacing="2">CANAL</text>
+<circle id="wLed" cx="190" cy="92" r="8" fill="#243024" stroke="#0b0f14" stroke-width="2"/>
+<rect x="64" y="152" width="192" height="76" rx="10" fill="url(#gLcd)" stroke="#0b0f14" stroke-width="3"/>
+<text x="76" y="176" font-size="12" font-family="monospace" font-weight="700" fill="#1c3324">CH</text>
+<text id="wCh" x="76" y="216" font-size="40" font-family="monospace" font-weight="700" fill="#14281b">1</text>
+<text id="wSala" x="246" y="174" text-anchor="end" font-size="12" font-family="monospace" font-weight="700" fill="#1c3324">SALA ----</text>
+<text id="wSt" x="246" y="196" text-anchor="end" font-size="13" font-family="monospace" font-weight="700" fill="#14281b">LISTO</text>
+<text id="wPe" x="246" y="216" text-anchor="end" font-size="11" font-family="monospace" fill="#1c3324"></text>
+<text x="160" y="252" text-anchor="middle" font-size="13" fill="#8a9ab0" font-family="Arial" font-weight="700" letter-spacing="5">OKKUM</text>
+<g fill="#0b1015"><rect x="84" y="266" width="152" height="6" rx="3"/><rect x="84" y="280" width="152" height="6" rx="3"/><rect x="84" y="294" width="152" height="6" rx="3"/><rect x="84" y="308" width="152" height="6" rx="3"/><rect x="84" y="322" width="152" height="6" rx="3"/><rect x="84" y="336" width="152" height="6" rx="3"/></g>
+<g id="wBOpen" class="btn bt"><rect class="bcap" x="70" y="362" width="52" height="40" rx="12" fill="#1b232d" stroke="#3a4756" stroke-width="2"/><g transform="translate(96 382)" fill="none" stroke="#cfd8e3" stroke-width="2" stroke-linecap="round"><rect x="-4" y="-11" width="8" height="14" rx="4"/><path d="M-9 -2a9 9 0 0 0 18 0M0 8v4"/></g></g>
+<g id="wBPerf" class="btn bt"><rect class="bcap" x="134" y="362" width="52" height="40" rx="12" fill="#1b232d" stroke="#3a4756" stroke-width="2"/><g transform="translate(160 382)" fill="none" stroke="#cfd8e3" stroke-width="2" stroke-linecap="round"><circle cx="0" cy="-5" r="5"/><path d="M-10 11a10 8 0 0 1 20 0"/></g></g>
+<g id="wBMute" class="btn bt m"><rect class="bcap" x="198" y="362" width="52" height="40" rx="12" fill="#1b232d" stroke="#3a4756" stroke-width="2"/><g transform="translate(224 382)" fill="none" stroke="#cfd8e3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M-10 -4h5l7 -6v20l-7 -6h-5z"/><path d="M9 -5a7 7 0 0 1 0 10"/><line id="wMx" x1="-11" y1="11" x2="12" y2="-12" stroke="#ff6a5e" stroke-width="3" style="display:none"/></g></g>
+<g fill="#8a9ab0" font-family="Arial" font-size="9" text-anchor="middle" letter-spacing="1"><text x="96" y="418">ABIERTO</text><text x="160" y="418">PERFIL</text><text x="224" y="418">SILENCIO</text></g>
+<g id="wPtt" class="btn pressable"><circle cx="160" cy="500" r="74" fill="#0b1015" stroke="#3a4756" stroke-width="3"/><circle class="pttcap" cx="160" cy="500" r="62" fill="url(#gPtt)" stroke="#5a1511" stroke-width="3"/><circle cx="160" cy="500" r="48" fill="none" stroke="#ffffff30" stroke-width="2"/><text x="160" y="498" text-anchor="middle" font-size="17" font-weight="800" fill="#fff" font-family="Arial" letter-spacing="2">HABLAR</text><text x="160" y="516" text-anchor="middle" font-size="10" fill="#ffd9d5" font-family="Arial">mantén pulsado</text></g>
+</svg>
+<p class="walh">Mantén el botón rojo (o el lateral) para hablar · toca la perilla para cambiar de canal</p>
+</div>
 
 <button class="fab" id="fab" title="Walkie-talkie" aria-label="Walkie-talkie"></button>
 <div id="lb"><button id="cerrar" aria-label="Cerrar"></button><img id="lbimg" alt=""></div>
@@ -324,6 +395,7 @@ enter:'<path d="M10 5H5v14h5M9 12h11M16 8l4 4-4 4"/>',
 plus:'<path d="M12 5v14M5 12h14"/>',
 link:'<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>',
 mic:'<rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6"/>',
+exit:'<path d="M14 5h5v14h-5M13 12H4M8 8l-4 4 4 4"/>',
 walkie:'<rect x="7" y="9" width="10" height="13" rx="2"/><path d="M10 9V3M10 13h4M10 17h4"/>',
 vol:'<path d="M4 10v4h4l5 4V6L8 10z"/><path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a8 8 0 0 1 0 11"/>',
 mute:'<path d="M4 10v4h4l5 4V6L8 10z"/><path d="M17 9l4 6M21 9l-4 6"/>',
@@ -387,12 +459,16 @@ function lsGet(k){try{return localStorage.getItem(k)}catch(e){return null}}
 function lsSet(k,v){try{localStorage.setItem(k,v)}catch(e){}}
 function codigo(){const a='ABCDEFGHJKMNPQRSTUVWXYZ23456789';let s='';for(let i=0;i<5;i++)s+=a[Math.floor(Math.random()*a.length)];return s}
 
-function entrar(c){
+function entrar(c,esNueva){
   c=(c||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,8);
   if(!c)return;
   if(unsub){unsub();unsub=null}
   syStop();
   sala=c;estados={};
+  hostId=null;members.clear();mutedIds.clear();banned.clear();forceMuted=false;
+  isHost=lsGet('okkum-host-'+c)==='1';
+  if(esNueva){lsSet('okkum-host-'+c,'1');isHost=true}
+  if(isHost)hostId=myId;
   $('cod').textContent=c;
   try{history.replaceState(null,'','#sala-'+c)}catch(e){}
   lsSet('okkum-sala',c);
@@ -414,10 +490,12 @@ function entrar(c){
     if(propio&&wr){syLoad(c);syJoin(c)}
   }
   render();
+  pintarMiembros();pintarAbierto();
   if(typeof wjoin==='function')wjoin();
 }
 
 async function marcar(i,v){
+  if(!sala)return;
   estados=Object.assign({},estados,{[i]:v});render();
   if(!db){const t=tick();tiempos[i]=t;lsSet('okkum-e-'+sala,JSON.stringify(estados));lsSet('okkum-t-'+sala,JSON.stringify(tiempos));syEnviar('estado',{i,v,t});return}
   const ref=db.doc('salas/'+sala);
@@ -428,8 +506,9 @@ async function marcar(i,v){
 $('unir').innerHTML=withIc('enter','Unirse');$('nueva').innerHTML=withIc('plus','Nueva sala');$('copiar').innerHTML=withIc('link','Copiar enlace');$('cerrar').innerHTML=svg('x');
 $('unir').onclick=()=>entrar($('ent').value);
 $('ent').onkeydown=e=>{if(e.key==='Enter')entrar($('ent').value)};
-$('nueva').onclick=()=>entrar(codigo());
+$('nueva').onclick=()=>entrar(codigo(),true);
 $('copiar').onclick=async()=>{
+  if(!sala)return;
   const u=location.href.split('#')[0]+'#sala-'+sala;
   try{await navigator.clipboard.writeText(u);$('copiar').innerHTML=withIc('ok','¡Copiado!')}catch(e){prompt('Copia el enlace:',u)}
   setTimeout(()=>$('copiar').innerHTML=withIc('link','Copiar enlace'),1500);
@@ -459,6 +538,34 @@ $('wmute').innerHTML=svg('vol');
 WCH.forEach(n=>{const b=document.createElement('button');b.textContent='Canal '+n;b.dataset.c=n;b.onclick=()=>{prepMic();wch=n;wcfg=true;lsSet('okkum-wcfg','1');marcaCanal();updateFab();ensureCtx();wjoin()};$('chs').appendChild(b)});
 function marcaCanal(){document.querySelectorAll('#chs button').forEach(b=>b.classList.toggle('on',+b.dataset.c===wch));const fc=$('fabc');if(fc)fc.textContent=wch}
 marcaCanal();
+
+/* ===== Bip de walkie-talkie y micrófono abierto ===== */
+let openMic=false,vadOn=false,vadUntil=0,enWal=false,rxLast=0,rxName='',forceMuted=false,isHost=false,hostId=null;
+function beep(at){
+  ensureCtx();if(!ctx)return;
+  const t=Math.max(at||0,ctx.currentTime+0.02);
+  const o=ctx.createOscillator(),g=ctx.createGain();
+  o.type='sine';o.frequency.setValueAtTime(1500,t);o.frequency.setValueAtTime(1100,t+0.07);
+  g.gain.setValueAtTime(0.0001,t);
+  g.gain.exponentialRampToValueAtTime(0.25,t+0.01);
+  g.gain.exponentialRampToValueAtTime(0.0001,t+0.16);
+  o.connect(g);g.connect(ctx.destination);o.start(t);o.stop(t+0.18);
+}
+function sendFin(){if(wRoom)wRoom.emit('fin',{i:myId}).catch(()=>{})}
+function rxFin(m){if(m.isMe||muted||(m.data&&mutedIds.has(m.data.i)))return;ensureCtx();if(!ctx)return;beep(Math.max(nextT,ctx.currentTime)+0.03)}
+function pintarAbierto(){
+  $('wopen').classList.toggle('on',openMic);
+  $('wopen').innerHTML=withIc('mic',openMic?'Micrófono abierto: ACTIVADO':'Micrófono abierto');
+  $('ptt').disabled=openMic||forceMuted||!wRoom;$('wopen').disabled=forceMuted;
+}
+function setOpen(on){
+  if(on&&(!wRoom||forceMuted))return;
+  openMic=on;pintarAbierto();
+  if(on){want=true;startTalk()}else stopTalk();
+}
+$('wopen').onclick=()=>{ensureCtx();setOpen(!openMic)};
+pintarAbierto();
+
 function ensureCtx(){try{if(!ctx)ctx=new (window.AudioContext||window.webkitAudioContext)();if(ctx.state==='suspended')ctx.resume()}catch(e){}}
 function wpeers(){if(!wRoom)return;const n=wRoom.peers().length;$('wst').textContent='Canal '+wch+' · '+n+(n===1?' conectado':' conectados')}
 async function wjoin(){
@@ -473,13 +580,15 @@ async function wjoin(){
     wRoom=r;
     otros.clear();pintarQuien();
     wUn.push(r.on('voz',rx));
+    wUn.push(r.on('fin',rxFin));
+    wUn.push(r.on('miem',rxMiem));wUn.push(r.on('cmd',rxCmd));
     wUn.push(r.on('perfil',rxPerfil));
-    wUn.push(r.onPeers(()=>{wpeers();anunciar()}));
-    wpeers();anunciar();$('ptt').disabled=false;$('fab').classList.remove('off');
+    wUn.push(r.onPeers(()=>{wpeers();anunciar();miemEmit()}));
+    wpeers();anunciar();pintarAbierto();miemEmit();$('fab').classList.remove('off');
   }catch(e){$('wst').textContent='No se pudo conectar al canal: revisa tu internet y vuelve a tocar el canal'}
 }
 function rx(m){
-  if(m.isMe||muted)return;
+  if(m.isMe||muted||(m.data&&mutedIds.has(m.data.i)))return;
   const a=m.data&&m.data.a;
   if(typeof a!=='string'||a.length>4000)return;
   ensureCtx();if(!ctx)return;
@@ -507,7 +616,7 @@ function cerrarMic(){
   if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}
 }
 async function startTalk(){
-  if(!wRoom||talking)return;
+  if(!wRoom||talking||forceMuted)return;
   ensureCtx();if(!ctx)return;
   clearTimeout(idleT);
   try{
@@ -520,12 +629,23 @@ async function startTalk(){
       proc.onaudioprocess=e=>{
         if(!talking)return;
         const d=e.inputBuffer.getChannelData(0),r=ctx.sampleRate/SR;
+        if(openMic){
+          let s=0;for(let i=0;i<d.length;i++)s+=d[i]*d[i];
+          const now=Date.now();
+          if(Math.sqrt(s/d.length)>0.02)vadUntil=now+700;
+          if(now>vadUntil){
+            if(vadOn){vadOn=false;if(out.length>100)enviar(out.length);out=[];sendFin()}
+            acc=0;cnt=0;return;
+          }
+          vadOn=true;
+        }
         for(let i=0;i<d.length;i++){acc+=d[i];cnt++;ph+=1;if(ph>=r){out.push(acc/cnt);acc=0;cnt=0;ph-=r}}
         while(out.length>=CH)enviar(CH);
       };
     }
   }catch(e){
     want=false;
+    if(openMic){openMic=false;pintarAbierto()}
     const nm=e&&e.name;
     $('wm').textContent=(!window.isSecureContext||!navigator.mediaDevices)?'El micrófono solo funciona con https (abre el enlace https del servidor, no un archivo ni http).':
       nm==='NotAllowedError'?'Permiso de micrófono bloqueado: toca el candado de la barra de direcciones y permite el micrófono; luego recarga.':
@@ -535,16 +655,18 @@ async function startTalk(){
     return;
   }
   if(!want){idleT=setTimeout(cerrarMic,30000);return}
-  out=[];acc=0;cnt=0;ph=0;talking=true;
-  $('ptt').classList.add('tx');$('fab').classList.add('tx');$('wm').textContent='Transmitiendo…';
-  maxT=setTimeout(stopTalk,30000);
+  out=[];acc=0;cnt=0;ph=0;vadOn=false;vadUntil=0;talking=true;
+  $('ptt').classList.add('tx');$('fab').classList.add('tx');
+  $('wm').textContent=openMic?'Micrófono abierto…':'Transmitiendo…';
+  if(!openMic)maxT=setTimeout(stopTalk,30000);
 }
 function stopTalk(){
   want=false;
   if(!talking)return;
   talking=false;clearTimeout(maxT);
   if(out.length>100)enviar(out.length);
-  out=[];
+  out=[];vadOn=false;
+  sendFin();beep();
   $('ptt').classList.remove('tx');$('fab').classList.remove('tx');$('wm').textContent='';
   idleT=setTimeout(cerrarMic,30000);
 }
@@ -559,7 +681,7 @@ function updateFab(){
 const wtEl=$('wt'),wtogEl=$('wtog');let fabRaf=0;
 function visFab(){
   const abierto=!wtEl.classList.contains('closed');
-  fab.classList.toggle('show',scrollY>120&&!(abierto&&inView));
+  fab.classList.toggle('show',scrollY>120&&!enWal&&!(abierto&&inView));
   wtogEl.classList.toggle('on',abierto);
 }
 function visFabRaf(){if(fabRaf)return;fabRaf=requestAnimationFrame(()=>{fabRaf=0;visFab()})}
@@ -576,7 +698,7 @@ pt.addEventListener('pointerdown',e=>{e.preventDefault();want=true;startTalk()})
 pt.addEventListener('contextmenu',e=>e.preventDefault());
 fab.addEventListener('pointerdown',e=>{
   e.preventDefault();fabHeld=false;clearTimeout(holdT);
-  holdT=setTimeout(()=>{holdT=null;if(!wcfg){abrirConfig();return}fabHeld=true;want=true;startTalk()},230);
+  holdT=setTimeout(()=>{holdT=null;if(!wcfg){abrirConfig();return}if(openMic)return;fabHeld=true;want=true;startTalk()},230);
 });
 function fabUp(){
   if(holdT){clearTimeout(holdT);holdT=null;const n=Date.now();if(!wcfg||n-lastTap<450){lastTap=0;abrirConfig()}else lastTap=n;return}
@@ -892,11 +1014,11 @@ async function syJoin(c){
     const r=await wr.join('st-'+c.toLowerCase());
     if(tok!==syTok){try{await r.leave()}catch(e){}return}
     sy=r;
-    r.on('estado',syRxEstado);
+    r.on('estado',syRxEstado);r.on('miem',rxMiem);r.on('cmd',rxCmd);
     r.on('full',m=>syMezclar(m&&m.data));
     r.on('orden',m=>{const d=m&&m.data;if(d)syOrden(d.o,+d.t)});
-    r.onPeers(n=>{syEst(n);syEnviar('full',syFull())});
-    syEst(r.peers().length);syEnviar('full',syFull());
+    r.onPeers(n=>{syEst(n);syEnviar('full',syFull());miemEmit()});
+    syEst(r.peers().length);syEnviar('full',syFull());miemEmit();
   }catch(e){
     if(tok!==syTok)return;
     $('est').textContent='Sin conexión a la sala; tus cambios se guardan aquí y se enviarán al reconectar';
@@ -937,6 +1059,7 @@ function rxPerfil(m){
 }
 function hablaRx(id){
   const p=(typeof id==='string'&&otros.get(id))||{n:'Alguien'};
+  rxName=nombre(p);rxLast=Date.now();
   const x=document.createElement('span');x.textContent=nombre(p)+' está hablando…';
   $('wm').replaceChildren(avatar(p,true),x);
   document.querySelectorAll('#quien .q').forEach(q=>q.classList.toggle('hab',q.dataset.i===id));
@@ -991,9 +1114,150 @@ $('pfok').onclick=()=>{
     else perfil.f='';
   }
   lsSet('okkum-perfil',JSON.stringify(perfil));
-  pintarYo();anunciar();cerrarPerfil();
+  pintarYo();anunciar();cerrarPerfil();miemEmit();pintarMiembros();
 };
 pintarYo();
+
+/* ===== Miembros, host (silenciar / expulsar) y salir de la sala ===== */
+let members=new Map(),mutedIds=new Set(),banned=new Set();
+const salaCh=()=>sy||wRoom;
+function miemEmit(){
+  const ch=salaCh();if(!ch||!sala)return;
+  const o={i:myId,n:perfil.n};
+  if(isHost){o.h=1;o.mu=[...mutedIds]}
+  ch.emit('miem',o).catch(()=>{});
+}
+function enviarCmd(k,to){const ch=salaCh();if(ch)ch.emit('cmd',{k,to,h:myId}).catch(()=>{})}
+function rxMiem(m){
+  if(m.isMe)return;const d=m.data;
+  if(!d||typeof d.i!=='string'||d.i.length>16||d.i===myId)return;
+  if(d.h===1&&!hostId)hostId=d.i;
+  if(d.h===1&&d.i===hostId&&Array.isArray(d.mu)&&!isHost){
+    mutedIds=new Set(d.mu.filter(x=>typeof x==='string'&&x.length<=16).slice(0,50));aplicarMute();
+  }
+  if(isHost&&banned.has(d.i)){enviarCmd('kick',d.i);return}
+  members.set(d.i,{n:String(d.n||'').slice(0,16),t:Date.now()});
+  pintarMiembros();
+}
+function rxCmd(m){
+  if(m.isMe)return;const d=m.data;
+  if(!d||!hostId||d.h!==hostId||typeof d.to!=='string')return;
+  if(d.k==='mute')mutedIds.add(d.to);
+  else if(d.k==='unmute')mutedIds.delete(d.to);
+  else if(d.k==='kick'){if(d.to===myId){salir('El host te expulsó de la sala.');return}members.delete(d.to)}
+  else return;
+  aplicarMute();pintarMiembros();
+}
+function aplicarMute(){
+  const f=!isHost&&mutedIds.has(myId);
+  if(f===forceMuted)return;
+  forceMuted=f;
+  if(f){
+    openMic=false;
+    if(talking)stopTalk();
+    $('wm').textContent='El host te silenció.';
+  }else $('wm').textContent='El host te quitó el silencio.';
+  pintarAbierto();
+}
+function pintarMiembros(){
+  const box=$('mb');
+  if(!sala){box.hidden=true;return}
+  box.hidden=false;
+  const lim=Date.now()-50000;members.forEach((v,k)=>{if(v.t<lim)members.delete(k)});
+  $('mbn').textContent=(members.size+1)+(members.size?' conectados':' conectado');
+  const fr=document.createDocumentFragment();
+  const fila=(id,n,yo)=>{
+    const r=document.createElement('div');r.className='mrow';
+    const s=document.createElement('span');s.className='mn';
+    s.textContent=(n||'Anónimo')+(yo?' (tú)':'');
+    r.appendChild(s);
+    if((yo&&isHost)||(!yo&&id===hostId)){const b=document.createElement('em');b.textContent='Host';r.appendChild(b)}
+    if(mutedIds.has(id)){const b=document.createElement('em');b.className='mu';b.textContent='Silenciado';r.appendChild(b)}
+    if(isHost&&!yo){
+      const a=document.createElement('button');a.type='button';a.textContent=mutedIds.has(id)?'Quitar silencio':'Silenciar';
+      a.onclick=()=>{
+        if(mutedIds.has(id)){mutedIds.delete(id);enviarCmd('unmute',id)}else{mutedIds.add(id);enviarCmd('mute',id)}
+        miemEmit();pintarMiembros();
+      };
+      const k=document.createElement('button');k.type='button';k.className='kick';k.textContent='Expulsar';
+      k.onclick=()=>{
+        if(!confirm('¿Expulsar a '+(n||'Anónimo')+' de la sala?'))return;
+        banned.add(id);members.delete(id);enviarCmd('kick',id);pintarMiembros();
+      };
+      r.append(a,k);
+    }
+    fr.appendChild(r);
+  };
+  fila(myId,perfil.n,true);
+  members.forEach((v,k)=>fila(k,v.n,false));
+  $('mbl').replaceChildren(fr);
+}
+function salir(motivo){
+  if(openMic)openMic=false;
+  if(talking)stopTalk();
+  cerrarMic();
+  wTok++;wUn.forEach(f=>{try{f()}catch(e){}});wUn=[];
+  if(wRoom){try{wRoom.leave()}catch(e){}wRoom=null}
+  if(unsub){unsub();unsub=null}
+  syStop();
+  lsSet('okkum-sala','');
+  sala=null;estados={};hostId=null;isHost=false;forceMuted=false;
+  members.clear();mutedIds.clear();banned.clear();otros.clear();pintarQuien();
+  $('cod').textContent='—';
+  $('est').textContent=motivo||'Saliste de la sala. Únete con un código o crea una nueva.';
+  $('wst').textContent='Sin sala';$('wm').textContent='';
+  try{history.replaceState(null,'',location.pathname+location.search)}catch(e){}
+  render();pintarMiembros();pintarAbierto();
+}
+$('salir').innerHTML=withIc('exit','Salir');
+$('salir').onclick=()=>{if(sala&&confirm('¿Salir de la sala '+sala+'?'))salir()};
+setInterval(()=>{miemEmit();pintarMiembros()},15000);
+
+/* ===== Vista solo walkie-talkie (dibujo interactivo) ===== */
+const walEl=$('wal');
+function walTxDown(e){
+  if(openMic||forceMuted)return;
+  e.preventDefault();ensureCtx();
+  try{e.currentTarget.setPointerCapture(e.pointerId)}catch(_){}
+  want=true;startTalk();
+}
+function walTxUp(){if(openMic)return;stopTalk()}
+['wPtt','wSide'].forEach(id=>{
+  const el=$(id);
+  el.addEventListener('pointerdown',walTxDown);
+  ['pointerup','pointercancel'].forEach(ev=>el.addEventListener(ev,walTxUp));
+  el.addEventListener('contextmenu',e=>e.preventDefault());
+});
+$('wKnob').onclick=()=>{
+  const n=wch%WCH.length+1;
+  prepMic();wch=n;wcfg=true;lsSet('okkum-wcfg','1');marcaCanal();updateFab();ensureCtx();wjoin();walRefresh();
+};
+$('wBOpen').onclick=()=>{ensureCtx();setOpen(!openMic)};
+$('wBPerf').onclick=()=>abrirPerfil();
+$('wBMute').onclick=()=>$('wmute').click();
+function walRefresh(){
+  if(!enWal)return;
+  const rxo=Date.now()-rxLast<900;
+  walEl.classList.toggle('tx',talking);
+  walEl.classList.toggle('rx',!talking&&rxo);
+  walEl.classList.toggle('dis',forceMuted);
+  $('wKnobR').setAttribute('transform','rotate('+((wch-1)*90)+' 110 96)');
+  $('wCh').textContent=wch;
+  $('wSala').textContent='SALA '+(sala||'----');
+  let st='LISTO';
+  if(!sala)st='SIN SALA';
+  else if(forceMuted)st='SILENCIADO';
+  else if(!wRoom)st='CONECTANDO';
+  else if(talking)st=openMic?'MIC ABIERTO':'TX';
+  else if(rxo)st=('RX '+rxName).toUpperCase().slice(0,14);
+  else if(muted)st='SIN SONIDO';
+  $('wSt').textContent=st;
+  $('wPe').textContent=wRoom?wRoom.peers().length+' EN CANAL':'';
+  $('wBOpen').classList.toggle('on',openMic);
+  $('wBMute').classList.toggle('on',muted);
+  $('wMx').style.display=muted?'':'none';
+}
+setInterval(walRefresh,150);
 
 /* ===== Guión técnico ===== */
 const guion=[
@@ -1050,27 +1314,29 @@ const guion=[
 /* ===== Entrada y pestañas (el walkie-talkie y la sala quedan fuera de las vistas, así sirven en ambas) ===== */
 $('mEsc').innerHTML=withIc('list','Escenas');$('mGui').innerHTML=withIc('doc','Guión técnico');
 $('spEsc').innerHTML=withIc('list','Escenas');$('spGui').innerHTML=withIc('doc','Guión técnico');
+$('spWal').innerHTML=withIc('walkie','Solo walkie-talkie (sin guión)');$('mWal').innerHTML=withIc('walkie','Walkie');
 function modo(m){
-  const g=m==='gui';
-  $('vEsc').hidden=g;$('vGui').hidden=!g;
-  $('mEsc').classList.toggle('on',!g);$('mGui').classList.toggle('on',g);
-  scrollTo(0,0);visFab();
+  enWal=m==='wal';
+  $('vEsc').hidden=m!=='esc';$('vGui').hidden=m!=='gui';$('vWal').hidden=!enWal;
+  $('mEsc').classList.toggle('on',m==='esc');$('mGui').classList.toggle('on',m==='gui');$('mWal').classList.toggle('on',enWal);
+  scrollTo(0,0);visFab();walRefresh();
 }
-$('mEsc').onclick=()=>modo('esc');$('mGui').onclick=()=>modo('gui');
+$('mEsc').onclick=()=>modo('esc');$('mGui').onclick=()=>modo('gui');$('mWal').onclick=()=>modo('wal');
 const splash=$('splash');
 function elegir(m){
+  if(m==='wal')ensureCtx();
   modo(m);
   document.documentElement.classList.remove('sp');
   splash.classList.add('fuera');
   setTimeout(()=>splash.remove(),450);
 }
-$('spEsc').onclick=()=>elegir('esc');$('spGui').onclick=()=>elegir('gui');
+$('spEsc').onclick=()=>elegir('esc');$('spGui').onclick=()=>elegir('gui');$('spWal').onclick=()=>elegir('wal');
 setTimeout(()=>{splash.classList.add('listo');$('spGui').focus({preventScroll:true})},1500);
 
 if('serviceWorker' in navigator&&/^https?:/.test(location.protocol)){addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}),{once:true})}
 (function inicio(){
   const h=(location.hash.match(/sala-([A-Za-z0-9]+)/)||[])[1];
-  entrar(h||lsGet('okkum-sala')||codigo());
+  const g=h||lsGet('okkum-sala');entrar(g||codigo(),!g);
   if(window.claude&&claude.use){
     claude.use('db').then(d=>{if(d){db=d;entrar(sala)}}).catch(()=>{});
   }

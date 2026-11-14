@@ -202,6 +202,29 @@ html.sp,html.sp body{overflow:hidden}
 .gb p{margin:0 0 12px;color:#b6c3d2;font-size:.98rem}
 .gb p:last-child{margin-bottom:0}
 .gb b{display:block;font-size:.8rem;letter-spacing:.06em;text-transform:uppercase;color:var(--teal);margin-bottom:2px}
+.av{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:50%;background:#16283a;border:2px solid var(--line);color:var(--txt);font-weight:700;overflow:hidden;flex:0 0 auto}
+.av img{width:100%;height:100%;object-fit:cover;display:block}
+.av.sm{width:26px;height:26px;font-size:.75rem;border-width:1px}
+.yo{display:flex;margin-top:12px}
+.yoBtn{display:flex;align-items:center;gap:10px;cursor:pointer;border-radius:999px;border:1px solid var(--line);background:#16283a;color:var(--txt);padding:5px 16px 5px 5px;font-size:.9rem}
+.yoBtn:hover{border-color:var(--red)}
+.quien{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.quien:empty{display:none}
+.q{display:flex;align-items:center;gap:6px;font-size:.82rem;color:var(--mute);padding:3px 12px 3px 3px;border-radius:999px;border:1px solid var(--bd)}
+.q.hab{border-color:var(--teal);color:var(--txt);box-shadow:0 0 12px #3fa7a066}
+.wm{display:flex;align-items:center;gap:8px}
+#pf{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;background:rgba(5,8,12,.92);padding:16px;overflow:auto}
+.pfc{background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:18px;width:min(360px,100%);display:flex;flex-direction:column;gap:12px}
+.pfc h3{margin:0;text-align:center}
+.pfc label{font-size:.85rem;color:var(--mute)}
+.pfc input[type=text]{background:#0a1018;color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:11px 12px;font-size:16px;width:100%}
+.pfc input[type=range]{width:100%;accent-color:var(--red)}
+.pfc button{cursor:pointer;border-radius:10px;border:1px solid var(--line);background:#16283a;color:var(--txt);padding:11px 12px;font-size:.92rem;flex:1;display:inline-flex;align-items:center;justify-content:center;gap:7px}
+.pfc button.ok{background:var(--red);border-color:var(--red);color:#1a0403;font-weight:700}
+.pfc .row{flex-wrap:nowrap}
+.pfv{width:min(240px,70vw);aspect-ratio:1;margin:0 auto;border-radius:50%;overflow:hidden;border:3px solid var(--red);touch-action:none;cursor:grab;background:#0a1018}
+.pfv canvas{display:block;width:100%;height:100%}
+.pfh{text-align:center;font-size:.8rem;color:var(--mute);margin-top:-4px}
 @media (max-width:640px){.modos{padding:0 10px}.acto{padding:0 14px;font-size:1.2rem}.gb{margin:0 10px 14px;padding:14px}}
 
 </style>
@@ -226,6 +249,8 @@ html.sp,html.sp body{overflow:hidden}
 </section>
 <section class="wt closed" id="wt">
   <div class="wth"><span class="ico" id="wico"></span><b>Walkie-talkie</b><small id="wst">Conectando…</small><button id="wlisto"></button></div>
+  <div class="yo" id="yo"></div>
+  <div class="quien" id="quien"></div>
   <div class="chs" id="chs"></div>
   <div class="wrow">
     <button class="ptt" id="ptt" disabled></button>
@@ -247,6 +272,19 @@ html.sp,html.sp body{overflow:hidden}
 <button class="fab" id="fab" title="Walkie-talkie" aria-label="Walkie-talkie"></button>
 <div id="lb"><button id="cerrar" aria-label="Cerrar"></button><img id="lbimg" alt=""></div>
 <input type="file" id="file" accept="image/*" hidden>
+<input type="file" id="pfile" accept="image/*" hidden>
+<div id="pf" hidden role="dialog" aria-label="Mi perfil">
+  <div class="pfc">
+    <h3>Mi perfil</h3>
+    <div class="pfv" id="pfv"><canvas id="pfcv" width="256" height="256"></canvas></div>
+    <div class="pfh">Arrastra la foto para encuadrar · usa el control para hacer zoom</div>
+    <input type="range" id="pfzoom" min="1" max="4" step="0.01" value="1" aria-label="Zoom">
+    <div class="row"><button id="pfel" type="button"></button><button id="pfqt" type="button"></button></div>
+    <label for="pfnick">Nick</label>
+    <input type="text" id="pfnick" maxlength="16" placeholder="Tu nick" autocomplete="off">
+    <div class="row"><button id="pfcan" type="button">Cancelar</button><button id="pfok" type="button" class="ok">Guardar</button></div>
+  </div>
+</div>
 
 <script>
 const uri=s=>'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(s);
@@ -407,7 +445,7 @@ let wr=null,wch=1,wRoom=null,wUn=[],wTok=0,ctx=null,talking=false,want=false,str
 $('wico').innerHTML=svg('walkie');
 $('ptt').innerHTML=withIc('mic','Mantén para hablar');
 $('wmute').innerHTML=svg('vol');
-WCH.forEach(n=>{const b=document.createElement('button');b.textContent='Canal '+n;b.dataset.c=n;b.onclick=()=>{wch=n;wcfg=true;lsSet('okkum-wcfg','1');marcaCanal();updateFab();ensureCtx();wjoin()};$('chs').appendChild(b)});
+WCH.forEach(n=>{const b=document.createElement('button');b.textContent='Canal '+n;b.dataset.c=n;b.onclick=()=>{prepMic();wch=n;wcfg=true;lsSet('okkum-wcfg','1');marcaCanal();updateFab();ensureCtx();wjoin()};$('chs').appendChild(b)});
 function marcaCanal(){document.querySelectorAll('#chs button').forEach(b=>b.classList.toggle('on',+b.dataset.c===wch));const fc=$('fabc');if(fc)fc.textContent=wch}
 marcaCanal();
 function ensureCtx(){try{if(!ctx)ctx=new (window.AudioContext||window.webkitAudioContext)();if(ctx.state==='suspended')ctx.resume()}catch(e){}}
@@ -422,9 +460,11 @@ async function wjoin(){
     const r=await wr.join('wt-'+sala.toLowerCase()+'-c'+wch);
     if(tok!==wTok){try{await r.leave()}catch(e){}return}
     wRoom=r;
+    otros.clear();pintarQuien();
     wUn.push(r.on('voz',rx));
-    wUn.push(r.onPeers(wpeers));
-    wpeers();$('ptt').disabled=false;$('fab').classList.remove('off');
+    wUn.push(r.on('perfil',rxPerfil));
+    wUn.push(r.onPeers(()=>{wpeers();anunciar()}));
+    wpeers();anunciar();$('ptt').disabled=false;$('fab').classList.remove('off');
   }catch(e){$('wst').textContent='No se pudo conectar al canal'}
 }
 function rx(m){
@@ -439,8 +479,7 @@ function rx(m){
     const src=ctx.createBufferSource();src.buffer=b;src.connect(ctx.destination);
     if(nextT<ctx.currentTime+0.05)nextT=ctx.currentTime+0.25;
     src.start(nextT);nextT+=n/SR;
-    $('wm').textContent='Recibiendo voz…';
-    clearTimeout(rxT);rxT=setTimeout(()=>{if(!talking)$('wm').textContent=''},800);
+    hablaRx(m.data.i);
   }catch(e){}
 }
 function enviar(n){
@@ -449,7 +488,7 @@ function enviar(n){
   for(let i=0;i<n;i++)u[i]=Math.max(0,Math.min(255,Math.round(128+out[i]*160)));
   out=out.slice(n);
   let s='';for(let i=0;i<n;i++)s+=String.fromCharCode(u[i]);
-  wRoom.emit('voz',{a:btoa(s)}).catch(()=>{});
+  wRoom.emit('voz',{a:btoa(s),i:myId}).catch(()=>{});
 }
 function cerrarMic(){
   try{proc&&proc.disconnect();srcN&&srcN.disconnect();gz&&gz.disconnect()}catch(e){}
@@ -477,7 +516,7 @@ async function startTalk(){
   }catch(e){
     want=false;$('wm').textContent='No se pudo usar el micrófono (permiso denegado o no disponible en este dispositivo).';return;
   }
-  if(!want){idleT=setTimeout(cerrarMic,8000);return}
+  if(!want){idleT=setTimeout(cerrarMic,30000);return}
   out=[];acc=0;cnt=0;ph=0;talking=true;
   $('ptt').classList.add('tx');$('fab').classList.add('tx');$('wm').textContent='Transmitiendo…';
   maxT=setTimeout(stopTalk,30000);
@@ -489,7 +528,7 @@ function stopTalk(){
   if(out.length>100)enviar(out.length);
   out=[];
   $('ptt').classList.remove('tx');$('fab').classList.remove('tx');$('wm').textContent='';
-  idleT=setTimeout(cerrarMic,8000);
+  idleT=setTimeout(cerrarMic,30000);
 }
 const pt=$('ptt');
 const fab=$('fab');
@@ -506,12 +545,13 @@ function visFab(){
   wtogEl.classList.toggle('on',abierto);
 }
 function visFabRaf(){if(fabRaf)return;fabRaf=requestAnimationFrame(()=>{fabRaf=0;visFab()})}
-function abrirConfig(){$('wt').classList.remove('closed');scrollTo({top:0,behavior:'smooth'});visFab()}
+function prepMic(){if(!talking&&wRoom){want=false;startTalk()}}
+function abrirConfig(){prepMic();$('wt').classList.remove('closed');scrollTo({top:0,behavior:'smooth'});visFab()}
 function cerrarConfig(){$('wt').classList.add('closed');visFab()}
 $('wtog').innerHTML=svg('walkie');
 $('wlisto').innerHTML=withIc('check','Listo');
 $('wtog').onclick=()=>{$('wt').classList.contains('closed')?abrirConfig():cerrarConfig()};
-$('wlisto').onclick=()=>{wcfg=true;lsSet('okkum-wcfg','1');updateFab();cerrarConfig()};
+$('wlisto').onclick=()=>{prepMic();wcfg=true;lsSet('okkum-wcfg','1');updateFab();cerrarConfig()};
 updateFab();
 pt.addEventListener('pointerdown',e=>{e.preventDefault();want=true;startTalk()});
 ['pointerup','pointercancel','pointerleave'].forEach(ev=>pt.addEventListener(ev,stopTalk));
@@ -664,11 +704,102 @@ function arrastre(el,grip){
 $('wmute').onclick=()=>{muted=!muted;$('wmute').classList.toggle('off',muted);$('wmute').innerHTML=svg(muted?'mute':'vol')};
 if(window.claude&&claude.use){
   claude.use('room').then(r=>{
-    if(!r){$('wst').textContent='No disponible en este dispositivo';return}
+    if(!r){$('wst').textContent='Sin voz aquí: el walkie solo funciona en la versión de claude.ai';return}
     wr=r;wjoin();
-  }).catch(()=>{$('wst').textContent='No disponible en este dispositivo'});
-}else{$('wst').textContent='No disponible en este dispositivo'}
+  }).catch(()=>{$('wst').textContent='Sin voz aquí: el walkie solo funciona en la versión de claude.ai'});
+}else{$('wst').textContent='Sin voz aquí: el walkie solo funciona en la versión de claude.ai'}
 
+
+
+/* ===== Perfil: nick + foto recortable (se muestra a quien esté en tu canal) ===== */
+const myId=(()=>{let v=lsGet('okkum-id');if(!v){v=Math.random().toString(36).slice(2,10);lsSet('okkum-id',v)}return v})();
+let perfil={n:'',f:''};
+try{const o=JSON.parse(lsGet('okkum-perfil')||'{}');perfil.n=String(o.n||'').slice(0,16);perfil.f=okFoto(o.f)?o.f:''}catch(e){}
+function okFoto(f){return typeof f==='string'&&f.length<14000&&/^data:image\/jpeg;base64,[A-Za-z0-9+\/=]+$/.test(f)}
+const nombre=p=>(p&&p.n)||'Anónimo';
+function avatar(p,sm){
+  const a=document.createElement('span');a.className='av'+(sm?' sm':'');
+  if(p&&p.f){const i=document.createElement('img');i.alt='';i.src=p.f;a.appendChild(i)}
+  else a.textContent=(nombre(p)[0]||'?').toUpperCase();
+  return a;
+}
+function pintarYo(){
+  const b=document.createElement('button');b.type='button';b.className='yoBtn';
+  const t=document.createElement('span');t.textContent=perfil.n||'Poner nick y foto';
+  b.append(avatar(perfil),t);b.onclick=abrirPerfil;$('yo').replaceChildren(b);
+}
+const otros=new Map();
+function pintarQuien(){
+  const lim=Date.now()-60000;otros.forEach((v,k)=>{if(v.t<lim)otros.delete(k)});
+  const fr=document.createDocumentFragment();
+  otros.forEach((v,k)=>{const q=document.createElement('span');q.className='q';q.dataset.i=k;const n=document.createElement('span');n.textContent=nombre(v);q.append(avatar(v,true),n);fr.appendChild(q)});
+  $('quien').replaceChildren(fr);
+}
+function anunciar(){if(wRoom)wRoom.emit('perfil',{i:myId,n:perfil.n,f:perfil.f}).catch(()=>{})}
+function rxPerfil(m){
+  if(m.isMe)return;const d=m.data;
+  if(!d||typeof d.i!=='string'||d.i.length>16||d.i===myId)return;
+  otros.set(d.i,{n:String(d.n||'').slice(0,16),f:okFoto(d.f)?d.f:'',t:Date.now()});pintarQuien();
+}
+function hablaRx(id){
+  const p=(typeof id==='string'&&otros.get(id))||{n:'Alguien'};
+  const x=document.createElement('span');x.textContent=nombre(p)+' está hablando…';
+  $('wm').replaceChildren(avatar(p,true),x);
+  document.querySelectorAll('#quien .q').forEach(q=>q.classList.toggle('hab',q.dataset.i===id));
+  clearTimeout(rxT);rxT=setTimeout(()=>{if(!talking)$('wm').textContent='';document.querySelectorAll('#quien .q.hab').forEach(q=>q.classList.remove('hab'))},800);
+}
+setInterval(()=>{anunciar();pintarQuien()},25000);
+
+const pf=$('pf'),pfcv=$('pfcv'),pfx=pfcv.getContext('2d'),pfzoom=$('pfzoom'),PS=256;
+let pim=null,pz=1,pox=0,poy=0,pbase=1,psucia=false;
+function pClamp(){const k=pbase*pz;pox=Math.min(0,Math.max(PS-pim.width*k,pox));poy=Math.min(0,Math.max(PS-pim.height*k,poy))}
+function pDib(){pfx.fillStyle='#0a1018';pfx.fillRect(0,0,PS,PS);if(pim){const k=pbase*pz;pfx.drawImage(pim,pox,poy,pim.width*k,pim.height*k)}}
+function pCargar(im){pim=im;pbase=Math.max(PS/im.width,PS/im.height);pz=1;pfzoom.value=1;pox=(PS-im.width*pbase)/2;poy=(PS-im.height*pbase)/2;pDib()}
+function pZoom(v){
+  if(!pim)return;
+  const o=pbase*pz,mx=(PS/2-pox)/o,my=(PS/2-poy)/o;
+  pz=Math.min(4,Math.max(1,v));pfzoom.value=pz;
+  const k=pbase*pz;pox=PS/2-mx*k;poy=PS/2-my*k;pClamp();pDib();psucia=true;
+}
+function abrirPerfil(){
+  $('pfnick').value=perfil.n;pim=null;psucia=false;pz=1;pfzoom.value=1;pDib();
+  if(perfil.f){const i=new Image();i.onload=()=>pCargar(i);i.src=perfil.f}
+  pf.hidden=false;
+}
+function cerrarPerfil(){pf.hidden=true}
+$('pfel').innerHTML=withIc('cam','Elegir foto');$('pfqt').innerHTML=withIc('x','Quitar foto');
+$('pfel').onclick=()=>$('pfile').click();
+$('pfqt').onclick=()=>{pim=null;psucia=true;pDib()};
+$('pfile').onchange=async()=>{
+  const f=$('pfile').files[0];$('pfile').value='';if(!f)return;
+  try{pCargar(await createImageBitmap(f,{imageOrientation:'from-image'}))}
+  catch(e){const i=new Image(),u=URL.createObjectURL(f);i.onload=()=>{pCargar(i);URL.revokeObjectURL(u)};i.src=u}
+  psucia=true;
+};
+pfzoom.oninput=()=>pZoom(+pfzoom.value);
+let pdrag=null;
+const pfv=$('pfv');
+pfv.addEventListener('pointerdown',e=>{if(!pim)return;pdrag={x:e.clientX,y:e.clientY};pfv.setPointerCapture(e.pointerId);pfv.style.cursor='grabbing'});
+pfv.addEventListener('pointermove',e=>{
+  if(!pdrag||!pim)return;
+  const k=PS/pfv.getBoundingClientRect().width;
+  pox+=(e.clientX-pdrag.x)*k;poy+=(e.clientY-pdrag.y)*k;pdrag={x:e.clientX,y:e.clientY};pClamp();pDib();psucia=true;
+});
+['pointerup','pointercancel'].forEach(ev=>pfv.addEventListener(ev,()=>{pdrag=null;pfv.style.cursor=''}));
+pfv.addEventListener('wheel',e=>{e.preventDefault();pZoom(pz*(e.deltaY<0?1.08:1/1.08))},{passive:false});
+$('pfcan').onclick=cerrarPerfil;
+pf.addEventListener('click',e=>{if(e.target===pf)cerrarPerfil()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!pf.hidden)cerrarPerfil()});
+$('pfok').onclick=()=>{
+  perfil.n=$('pfnick').value.trim().slice(0,16);
+  if(psucia){
+    if(pim){const c=document.createElement('canvas');c.width=c.height=96;const x=c.getContext('2d');x.imageSmoothingQuality='high';x.drawImage(pfcv,0,0,PS,PS,0,0,96,96);perfil.f=c.toDataURL('image/jpeg',.78)}
+    else perfil.f='';
+  }
+  lsSet('okkum-perfil',JSON.stringify(perfil));
+  pintarYo();anunciar();cerrarPerfil();
+};
+pintarYo();
 
 /* ===== Guión técnico ===== */
 const guion=[

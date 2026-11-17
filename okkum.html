@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0a1018">
+<title>Okkum: Entre nosotros</title>
+<style>
+  :root{--bg:#0a1018;--card:#111c2a;--line:#27425a;--txt:#e3e9f0;--mute:#9fb1c4;--red:#d9453d;--teal:#3fa7a0;--bd:#1f3347;--btn:#16283a;box-sizing:border-box}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;background:var(--bg);color:var(--txt);overflow:hidden;
+    font-family:system-ui,Segoe UI,Arial,sans-serif;line-height:1.6;-webkit-text-size-adjust:100%}
+  button{-webkit-tap-highlight-color:transparent;touch-action:manipulation;font:inherit}
+  #stage{position:fixed;inset:0;background:#070b11}
+  video{width:100%;height:100%;object-fit:contain;background:#070b11;display:block}
+
+  /* Portada: mismo fondo y logo que la página de Okkum */
+  #cover{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:34px;
+    padding:20px calc(20px + env(safe-area-inset-right,0px)) 20px calc(20px + env(safe-area-inset-left,0px));
+    background:linear-gradient(rgba(8,12,18,.7),rgba(8,12,18,.7)),url("images/fondo.jpg") center/cover no-repeat,var(--bg);
+    transition:opacity .4s;z-index:5}
+  #cover.hide{opacity:0;pointer-events:none}
+  #logo{width:min(88vw,640px);max-height:44vh;height:auto;object-fit:contain;filter:drop-shadow(0 4px 24px #d9453d55)}
+  #logoFallback{display:none;font-size:clamp(44px,10vw,100px);font-weight:700;letter-spacing:.18em;color:var(--red);filter:drop-shadow(0 4px 24px #d9453d55)}
+  #bigPlay{width:78px;height:78px;border-radius:50%;border:2px solid var(--red);background:#1a1520;color:var(--red);cursor:pointer;
+    display:grid;place-items:center;box-shadow:0 6px 24px #000a;transition:background .2s,color .2s,box-shadow .2s,transform .2s}
+  #bigPlay:hover,#bigPlay:focus-visible{background:var(--red);color:#1a0403;box-shadow:0 0 28px #d9453d88;transform:scale(1.05);outline:0}
+  #bigPlay .ico{width:34px;height:34px;margin-left:4px}
+
+  /* Controles: solo aparecen con el cursor en la parte de abajo */
+  #zone{position:absolute;left:0;right:0;bottom:0;height:130px;z-index:4}
+  #bar{position:absolute;left:0;right:0;bottom:0;padding:48px calc(18px + env(safe-area-inset-right,0px)) calc(16px + env(safe-area-inset-bottom,0px)) calc(18px + env(safe-area-inset-left,0px));
+    background:linear-gradient(to top,rgba(8,12,18,.94),rgba(8,12,18,0));display:flex;flex-direction:column;gap:8px;
+    opacity:0;transform:translateY(8px);transition:opacity .25s ease,transform .25s ease;pointer-events:none}
+  #zone.show #bar{opacity:1;transform:none;pointer-events:auto}
+  .row{display:flex;align-items:center;gap:10px}
+  button.c{background:var(--btn);border:1px solid var(--line);color:var(--txt);cursor:pointer;min-width:42px;height:42px;padding:0 10px;
+    display:grid;place-items:center;border-radius:12px;transition:border-color .15s,color .15s,box-shadow .15s}
+  button.c:hover{border-color:var(--red);box-shadow:0 0 14px #d9453d44}
+  button.c:focus-visible{outline:2px solid var(--red);outline-offset:2px}
+  .ico{display:inline-flex;width:1.15em;height:1.15em;vertical-align:-.2em}
+  .ico svg{width:100%;height:100%}
+  button.c .ico{width:22px;height:22px}
+  button.c.sk{display:flex;align-items:center;gap:5px}
+  button.c.sk .ico{width:20px;height:20px}
+  .skip{font-size:.8rem;font-weight:700;color:var(--mute)}
+  button.c:hover .skip{color:var(--txt)}
+  .time{font-size:.85rem;font-variant-numeric:tabular-nums;color:var(--mute);min-width:96px;padding-left:4px}
+  .pct{font-size:.78rem;min-width:40px;text-align:right;font-variant-numeric:tabular-nums;color:var(--mute)}
+  .spacer{flex:1}
+  input[type=range]{-webkit-appearance:none;appearance:none;background:transparent;cursor:pointer;height:20px}
+  input[type=range]:focus-visible{outline:2px solid var(--red);outline-offset:3px;border-radius:6px}
+  input[type=range]::-webkit-slider-runnable-track{height:5px;border-radius:3px;background:linear-gradient(to right,var(--red) var(--p,0%),var(--line) var(--p,0%))}
+  input[type=range]::-moz-range-track{height:5px;border-radius:3px;background:var(--line)}
+  input[type=range]::-moz-range-progress{height:5px;border-radius:3px;background:var(--red)}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:15px;height:15px;border-radius:50%;background:var(--red);border:3px solid var(--bg);box-shadow:0 0 0 2px var(--red);margin-top:-5px}
+  input[type=range]::-moz-range-thumb{width:9px;height:9px;border-radius:50%;background:var(--red);border:3px solid var(--bg);box-shadow:0 0 0 2px var(--red)}
+  #seek{width:100%}
+  #vol{width:110px}
+
+  .ghost{display:inline-flex;align-items:center;gap:8px;cursor:pointer;background:var(--btn);border:1px solid var(--line);color:var(--mute);
+    border-radius:12px;padding:10px 16px;font-size:.9rem;transition:border-color .15s,color .15s}
+  .ghost:hover,.ghost:focus-visible{border-color:var(--red);color:var(--txt);outline:0}
+  #stage.drop::after{content:"Suelta aquí el video";position:absolute;inset:14px;z-index:9;display:grid;place-items:center;
+    border:2px dashed var(--red);border-radius:18px;background:rgba(8,12,18,.85);font-size:1.2rem}
+  #msg{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);display:none;z-index:6;width:min(92vw,520px);
+    text-align:center;padding:16px 18px;background:var(--card);border:1px solid var(--bd);border-radius:14px;color:var(--mute);font-size:.95rem}
+
+  #ytBox{position:absolute;inset:0;display:none;background:#000}
+  #ytBox iframe{width:100%;height:100%;border:0;display:block}
+  #ytShield{position:absolute;inset:0;display:none;z-index:2}
+  #stage.isyt #ytBox,#stage.isyt #ytShield{display:block}
+  #stage.isyt video,#stage.isyt #dl{display:none}
+  #dvBox{position:absolute;inset:0;display:none;background:#000;z-index:3}
+  #dvBox iframe{width:100%;height:100%;border:0;display:block}
+  #dvClose{position:absolute;top:calc(14px + env(safe-area-inset-top,0px));right:14px;z-index:7;display:none;opacity:.6}
+  #dvClose:hover,#dvClose:focus-visible{opacity:1}
+  #stage.isdrive #dvBox{display:block}
+  #stage.isdrive #dvClose{display:grid}
+  #stage.isdrive #zone,#stage.isdrive video{display:none}
+  .alt{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+
+  @media (max-width:640px){
+    #bar{padding-top:40px;gap:6px}
+    .row{gap:6px}
+    #vol,.pct{display:none}
+    button.c{min-width:44px;height:44px}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div id="stage">
+  <video id="v" playsinline preload="metadata"></video>
+  <div id="ytBox"><div id="ytTarget"></div></div>
+  <div id="ytShield"></div>
+  <div id="dvBox"><iframe id="dvFrame" allow="autoplay; fullscreen" allowfullscreen title="Google Drive"></iframe></div>
+  <button class="c" id="dvClose" aria-label="Volver" title="Volver"></button>
+
+  <div id="cover">
+    <img id="logo" src="okkum.png" alt="Okkum: Entre nosotros">
+    <div id="logoFallback">OKKUM</div>
+    <button id="bigPlay" aria-label="Reproducir"></button>
+    <div class="alt">
+      <button class="ghost" id="openFile"></button>
+      <button class="ghost" id="ytBtn"></button>
+    </div>
+    <input type="file" id="file" accept="video/*" hidden>
+  </div>
+
+  <div id="msg">No se encontró el video.<br>Pon un archivo llamado «okkum» (mp4, webm, mov, mkv…) junto a esta página.</div>
+
+  <div id="zone">
+    <div id="bar">
+      <input id="seek" type="range" min="0" max="1000" value="0" aria-label="Posición">
+      <div class="row">
+        <button class="c sk" id="back" aria-label="Retroceder 10 segundos"></button>
+        <button class="c" id="toggle" aria-label="Reproducir o pausar"></button>
+        <button class="c sk" id="fwd" aria-label="Adelantar 10 segundos"></button>
+        <span class="time" id="time">0:00 / 0:00</span>
+        <span class="spacer"></span>
+        <button class="c" id="mute" aria-label="Silenciar"></button>
+        <input id="vol" type="range" min="0" max="3" step="0.01" value="1" aria-label="Volumen">
+        <span class="pct" id="pct">100%</span>
+        <button class="c" id="dl" aria-label="Descargar el corto" title="Descargar el corto"></button>
+        <button class="c" id="full" aria-label="Pantalla completa"></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const v = $('v'), cover = $('cover'), zone = $('zone'), seek = $('seek'), vol = $('vol');
+
+/* Iconos: mismo estilo que la página de Okkum (trazo 2, puntas redondas) */
+const IC = {
+  play:'<path d="M7 4.5v15l13-7.5z"/>',
+  pause:'<path d="M8 5v14M16 5v14" stroke-width="2.8"/>',
+  back:'<path d="M4 12a8 8 0 1 0 2.6-5.9M4 4v4.5h4.5"/>',
+  fwd:'<path d="M20 12a8 8 0 1 1-2.6-5.9M20 4v4.5h-4.5"/>',
+  expand:'<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',
+  x:'<path d="M6 6l12 12M18 6L6 18" stroke-width="2.4"/>',
+  yt:'<rect x="3" y="6" width="18" height="12" rx="3.5"/><path d="M10.5 9.5v5l4-2.5z"/>',
+  folder:'<path d="M3 7h6l2 2h10v10H3z"/>',
+  download:'<path d="M12 4v11M7.5 11l4.5 4.5 4.5-4.5M5 20h14"/>',
+  vol:'<path d="M4 10v4h4l5 4V6L8 10z"/><path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a8 8 0 0 1 0 11"/>',
+  mute:'<path d="M4 10v4h4l5 4V6L8 10z"/><path d="M17 9l4 6M21 9l-4 6"/>'
+};
+const svg = k => '<span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + IC[k] + '</svg></span>';
+const ICON = { play:svg('play'), pause:svg('pause'), vol:svg('vol'), mute:svg('mute') };
+$('bigPlay').innerHTML = svg('play');
+$('back').innerHTML = svg('back') + '<span class="skip">10</span>';
+$('fwd').innerHTML = '<span class="skip">10</span>' + svg('fwd');
+$('full').innerHTML = svg('expand');
+$('dl').innerHTML = svg('download');
+$('openFile').innerHTML = svg('folder') + '<span>Abrir un video de mi computador</span>';
+$('ytBtn').innerHTML = svg('yt') + '<span>Abrir un enlace (YouTube o Drive)</span>';
+$('dvClose').innerHTML = svg('x');
+
+/* Si tu video está alojado en otro sitio, pega aquí su enlace directo (https://...). Déjalo vacío para usar el archivo okkum junto a esta página. */
+const VIDEO_URL = '';
+
+/* Busca el video llamado "okkum" con cualquier extensión común */
+const exts = ['mp4','webm','mov','m4v','mkv','ogv','avi'];
+const names = ['okkum','Okkum','OKKUM'];
+const candidates = VIDEO_URL ? [VIDEO_URL] : names.flatMap(n => exts.map(e => `${n}.${e}`));
+let idx = 0;
+function tryNext() {
+  if (idx >= candidates.length) { $('msg').style.display = 'block'; return; }
+  v.src = candidates[idx++];
+  v.load();
+}
+let localMode = false, localName = '';
+v.addEventListener('error', () => {
+  if (ytMode) return;
+  if (localMode) {
+    $('msg').innerHTML = 'Tu navegador no puede reproducir ese archivo.<br>Conviértelo a mp4 (H.264 + AAC) o webm.';
+    $('msg').style.display = 'block';
+    return;
+  }
+  tryNext();
+});
+tryNext();
+
+/* Logo: okkum.png → svgs/okkum.svg → texto */
+const logoSrcs = ['svgs/okkum.svg'];
+$('logo').addEventListener('error', () => {
+  const next = logoSrcs.shift();
+  if (next) { $('logo').src = next; }
+  else { $('logo').style.display = 'none'; $('logoFallback').style.display = 'block'; }
+});
+
+const fmt = s => { if (!isFinite(s)) return '0:00'; const m = Math.floor(s/60), r = Math.floor(s%60);
+  return m + ':' + String(r).padStart(2,'0'); };
+
+function openLocal(f) {
+  if (!f) return;
+  if (ytMode) exitYt();
+  if (driveMode) exitDrive(false);
+  if (v.src.startsWith('blob:')) URL.revokeObjectURL(v.src);
+  localMode = true; localName = f.name;
+  $('msg').style.display = 'none';
+  v.src = URL.createObjectURL(f);
+  v.load();
+  play();
+}
+$('openFile').onclick = () => $('file').click();
+$('file').onchange = () => { openLocal($('file').files[0]); $('file').value = ''; };
+const stg = $('stage');
+['dragenter','dragover'].forEach(ev => window.addEventListener(ev, e => { e.preventDefault(); stg.classList.add('drop'); }));
+['dragleave','drop'].forEach(ev => window.addEventListener(ev, e => { e.preventDefault(); stg.classList.remove('drop'); }));
+window.addEventListener('drop', e => { const f = e.dataTransfer.files[0]; if (f && f.type.startsWith('video/')) openLocal(f); });
+
+/* ===== YouTube (reproductor oculto + tus mismos controles) ===== */
+/* Opcional: pega aquí un enlace de YouTube para que cargue por defecto (o usa ?yt=ENLACE en la dirección) */
+const YOUTUBE_URL = '';
+let ytMode = false, yt = null, ytState = -1, ytTimer = null, ytApi = null, ytAuto = true;
+const stage = $('stage');
+function showMsg(h) { $('msg').innerHTML = h; $('msg').style.display = 'block'; }
+function ytId(u) {
+  u = (u || '').trim();
+  const m = u.match(/(?:youtu\.be\/|youtube(?:-nocookie)?\.com\/(?:watch\?(?:[^#]*&)?v=|embed\/|shorts\/|live\/|v\/))([\w-]{11})/);
+  if (m) return m[1];
+  return /^[\w-]{11}$/.test(u) ? u : null;
+}
+function loadYtApi() {
+  if (ytApi) return ytApi;
+  ytApi = new Promise(res => {
+    if (window.YT && YT.Player) return res();
+    const prev = window.onYouTubeIframeAPIReady;
+    window.onYouTubeIframeAPIReady = () => { if (prev) prev(); res(); };
+    const sc = document.createElement('script');
+    sc.src = 'https://www.youtube.com/iframe_api';
+    sc.onerror = () => { ytApi = null; res('error'); };
+    document.head.appendChild(sc);
+  });
+  return ytApi;
+}
+async function openYt(url, auto = true) {
+  const id = ytId(url);
+  if (!id) { showMsg('Ese enlace no parece ser de YouTube.'); return; }
+  const r = await loadYtApi();
+  if (r === 'error' || !(window.YT && YT.Player)) { showMsg('No se pudo cargar YouTube.<br>Revisa tu conexión a internet.'); return; }
+  if (driveMode) exitDrive(false);
+  v.pause();
+  ytMode = true; ytAuto = auto; ytState = -1;
+  stage.classList.add('isyt');
+  $('msg').style.display = 'none';
+  if (auto) cover.classList.add('hide'); else cover.classList.remove('hide');
+  vol.max = 1; level = Math.min(level, 1); syncVol();
+  if (yt && yt.loadVideoById) {
+    auto ? yt.loadVideoById(id) : yt.cueVideoById(id);
+  } else {
+    const pv = { controls:0, disablekb:1, fs:0, rel:0, modestbranding:1, iv_load_policy:3, playsinline:1, autoplay: auto ? 1 : 0 };
+    if (/^https?:/.test(location.protocol)) pv.origin = location.origin;
+    yt = new YT.Player('ytTarget', {
+      videoId: id, playerVars: pv,
+      events: {
+        onReady: () => { applyLevel(); if (ytAuto) yt.playVideo(); },
+        onStateChange: e => { ytState = e.data; syncPlay(); if (e.data === 0) cover.classList.remove('hide'); },
+        onError: () => showMsg('YouTube no permitió reproducir este video aquí.<br>Puede estar bloqueado para otras páginas, o la página se abrió como archivo local: ábrela desde un servidor (por ejemplo Live Server de VS Code).')
+      }
+    });
+  }
+  clearInterval(ytTimer); ytTimer = setInterval(syncTime, 250);
+}
+function exitYt() {
+  ytMode = false; clearInterval(ytTimer);
+  try { yt && yt.pauseVideo && yt.pauseVideo(); } catch (e) {}
+  stage.classList.remove('isyt');
+  vol.max = 3; syncVol(); syncPlay();
+}
+/* ===== Google Drive (usa el reproductor de Drive; el archivo debe estar compartido con "cualquier persona con el enlace") ===== */
+let driveMode = false;
+function driveId(u) {
+  const m = (u || '').match(/drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?(?:[^#]*&)?id=)([\w-]{20,})/);
+  return m ? m[1] : null;
+}
+function openDrive(url) {
+  const id = driveId(url);
+  if (!id) { showMsg('Ese enlace de Drive no es válido.'); return; }
+  if (ytMode) exitYt();
+  v.pause();
+  driveMode = true;
+  stage.classList.add('isdrive');
+  $('msg').style.display = 'none';
+  cover.classList.add('hide');
+  $('dvFrame').src = 'https://drive.google.com/file/d/' + id + '/preview';
+}
+function exitDrive(showCover = true) {
+  driveMode = false;
+  stage.classList.remove('isdrive');
+  $('dvFrame').src = 'about:blank';
+  if (showCover) cover.classList.remove('hide');
+}
+$('dvClose').onclick = () => exitDrive(true);
+
+/* Enlace directo a un video (.mp4, .webm…) */
+function openUrl(u) {
+  if (ytMode) exitYt();
+  if (driveMode) exitDrive(false);
+  localMode = true; localName = '';
+  $('msg').style.display = 'none';
+  v.src = u; v.load(); play();
+}
+
+/* Entrada única: YouTube, Drive o enlace directo */
+function openLink(u) {
+  u = (u || '').trim();
+  if (!u) return;
+  if (driveId(u)) return openDrive(u);
+  if (/^https?:\/\//i.test(u) && !/youtu/i.test(u)) return openUrl(u);
+  return openYt(u);
+}
+$('ytBtn').onclick = () => { const u = prompt('Pega el enlace de YouTube o de Google Drive:'); if (u) openLink(u); };
+window.addEventListener('paste', e => {
+  const t = (e.clipboardData && e.clipboardData.getData('text')) || '';
+  if (/youtu|drive\.google\.com/i.test(t) && t.length < 400) openLink(t);
+});
+$('ytShield').onclick = () => toggle();
+
+/* ===== Funciones comunes (video local o YouTube) ===== */
+const cur = () => ytMode ? ((yt && yt.getCurrentTime && yt.getCurrentTime()) || 0) : v.currentTime;
+const dur = () => ytMode ? ((yt && yt.getDuration && yt.getDuration()) || 0) : (v.duration || 0);
+const isPaused = () => ytMode ? (ytState !== 1 && ytState !== 3) : v.paused;
+function seekTo(t) { if (ytMode) { yt && yt.seekTo && yt.seekTo(t, true); } else { v.currentTime = t; } }
+function play() {
+  cover.classList.add('hide');
+  if (ytMode) { yt && yt.playVideo && yt.playVideo(); return; }
+  v.play().catch(()=>{});
+}
+function pause() { if (ytMode) { yt && yt.pauseVideo && yt.pauseVideo(); } else { v.pause(); } }
+function toggle() { isPaused() ? play() : pause(); }
+
+$('bigPlay').onclick = play;
+$('toggle').onclick = toggle;
+v.onclick = toggle;
+$('back').onclick = () => seekTo(Math.max(0, cur() - 10));
+$('fwd').onclick = () => seekTo(Math.min(dur(), cur() + 10));
+$('dl').onclick = () => {
+  const src = v.currentSrc || v.src;
+  if (!src) return;
+  const a = document.createElement('a');
+  a.href = src;
+  a.download = localName || ('okkum.' + (src.split('?')[0].split('.').pop() || 'mp4'));
+  document.body.appendChild(a); a.click(); a.remove();
+};
+$('full').onclick = () => document.fullscreenElement ? document.exitFullscreen() : $('stage').requestFullscreen?.();
+
+/* Volumen de 0% a 300% */
+let level = 1, lastLevel = 1, ctx = null, gain = null;
+function applyLevel() {
+  if (ytMode) {
+    level = Math.min(level, 1);
+    if (yt && yt.setVolume) { yt.setVolume(level * 100); level === 0 ? yt.mute() : yt.unMute(); }
+    syncVol(); return;
+  }
+  if (level > 1 && !ctx) {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (AC) {
+      ctx = new AC(); gain = ctx.createGain();
+      ctx.createMediaElementSource(v).connect(gain); gain.connect(ctx.destination);
+    }
+  }
+  if (ctx && ctx.state === 'suspended') ctx.resume();
+  v.volume = Math.min(level, 1);
+  if (gain) gain.gain.value = Math.max(level, 1);
+  v.muted = level === 0;
+  syncVol();
+}
+$('mute').onclick = () => {
+  if (level > 0) { lastLevel = level; level = 0; } else { level = lastLevel || 1; }
+  applyLevel();
+};
+vol.oninput = () => { level = +vol.value; if (level > 0) lastLevel = level; applyLevel(); };
+
+function syncVol() {
+  $('mute').innerHTML = level === 0 ? ICON.mute : ICON.vol;
+  vol.value = level;
+  $('pct').textContent = Math.round(level * 100) + '%';
+  vol.style.setProperty('--p', (level / (ytMode ? 1 : 3) * 100) + '%');
+}
+function syncPlay() { $('toggle').innerHTML = isPaused() ? ICON.play : ICON.pause; }
+let seeking = false;
+function syncTime() {
+  const d = dur(), c = seeking ? (seek.value / 1000) * d : cur();
+  if (!seeking) { seek.value = d ? (c / d) * 1000 : 0; }
+  seek.style.setProperty('--p', (seek.value / 10) + '%');
+  $('time').textContent = fmt(c) + ' / ' + fmt(d);
+}
+seek.addEventListener('input', () => { seeking = true; if (!ytMode) seekTo((seek.value / 1000) * dur()); syncTime(); });
+seek.addEventListener('change', () => { if (ytMode) seekTo((seek.value / 1000) * dur()); seeking = false; });
+
+['play','pause'].forEach(e => v.addEventListener(e, syncPlay));
+['timeupdate','loadedmetadata','durationchange'].forEach(e => v.addEventListener(e, syncTime));
+v.addEventListener('ended', () => { cover.classList.remove('hide'); v.currentTime = 0; });
+syncPlay(); syncVol(); syncTime();
+
+/* Carga automática de YouTube (queda listo; tocas play para empezar) */
+{ const q = new URLSearchParams(location.search).get('yt') || YOUTUBE_URL; if (q) { driveId(q) ? openDrive(q) : openYt(q, false); } }
+
+/* Los controles aparecen solo cuando el cursor está en la parte de abajo */
+const ZONE_H = 130;
+function inBottom(y) { return y >= window.innerHeight - ZONE_H; }
+window.addEventListener('mousemove', e => zone.classList.toggle('show', inBottom(e.clientY)));
+document.addEventListener('mouseleave', () => zone.classList.remove('show'));
+zone.addEventListener('focusin', () => zone.classList.add('show'));
+zone.addEventListener('focusout', () => zone.classList.remove('show'));
+window.addEventListener('touchstart', e => zone.classList.toggle('show', inBottom(e.touches[0].clientY)), {passive:true});
+
+/* Atajos de teclado */
+window.addEventListener('keydown', e => {
+  if (e.code === 'Space') { e.preventDefault(); toggle(); }
+  if (e.code === 'ArrowRight') $('fwd').click();
+  if (e.code === 'ArrowLeft') $('back').click();
+  if (e.key === 'f') $('full').click();
+  if (e.key === 'm') $('mute').click();
+});
+</script>
+</body>
+</html>
